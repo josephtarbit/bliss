@@ -1,0 +1,4 @@
+rootProject.name = 'bliss'
+
+include 'bliss-common'
+include 'bliss-minecraft'

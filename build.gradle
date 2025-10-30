@@ -1,0 +1,61 @@
+subprojects {
+
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+        withSourcesJar()
+    }
+    
+    ext {
+        lwjglVersion = '3.2.2'
+    }
+
+    repositories {
+        mavenCentral()
+        google()
+    }
+
+    def lwjgl_natives = ['natives-windows', 'natives-linux', 'natives-macos']
+    def skija_natives = ['skija-macos-x64', 'skija-macos-arm64', 'skija-linux', 'skija-windows']
+
+    dependencies {
+        implementation group: 'it.unimi.dsi', name: 'fastutil', version: '8.5.9'
+        implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.5'
+        implementation group: 'org.jetbrains', name: 'annotations', version: '23.1.0'
+        implementation group: 'com.google.guava', name: 'guava', version: '31.1-jre'
+    
+        implementation group: 'org.lwjgl', name: 'lwjgl-yoga', version: lwjglVersion
+        implementation group: 'org.lwjgl', name: 'lwjgl-glfw', version: lwjglVersion
+        implementation group: 'org.lwjgl', name: 'lwjgl-opengl', version: lwjglVersion
+        lwjgl_natives.each {       
+            implementation group: 'org.lwjgl', name: 'lwjgl-yoga', version: lwjglVersion, classifier: it
+            implementation group: 'org.lwjgl', name: 'lwjgl-glfw', version: lwjglVersion, classifier: it
+            implementation group: 'org.lwjgl', name: 'lwjgl-opengl', version: lwjglVersion, classifier: it
+        }
+
+        skija_natives.each {
+            implementation group: 'io.github.humbleui', name: it, version: '0.106.0'
+        }
+
+        implementation group: 'net.java.timingframework', name: 'timingframework-core', version: '7.3.1'
+    }
+    
+    publishing {
+        repositories {
+            maven {
+                name 'sm0keysa1m0n'
+                url 'https://maven.tarbits.co.uk/releases'
+                credentials(PasswordCredentials)
+            }
+        }
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            }
+        }
+    }
+}

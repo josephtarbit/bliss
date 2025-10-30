@@ -1,0 +1,65 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+
+version = '0.0.3'
+
+minecraft {
+    mappings channel: 'official', version: '1.18.2'
+    
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+}
+
+dependencies {
+    minecraft group: 'net.minecraftforge', name:'forge', version: '1.18.2-40.1.80'
+    implementation project(':bliss-common')
+}
+
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
+}
+
+
+jar {
+    manifest {
+        attributes([
+            'FMLModType': 'GAMELIBRARY'
+        ])
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom.withXml {
+                NodeList dependencies = asNode().dependencies
+                NodeList allDeps = dependencies.'*'
+
+                // Remove forge deps
+                allDeps.<Node> findAll() { Node el ->
+                    el.artifactId.text() == 'forge' && el.groupId.text() == 'net.minecraftforge'
+                }.forEach() { Node el ->
+                    el.parent().remove(el)
+                }
+                //remove ForgeGradle's mapped suffix from versions & set as optional so anyone else doesn't inherit them
+                allDeps.<Node> findAll() { Node el ->
+                    el.version.text().contains('_mapped_')
+                }.each { Node el ->
+                    el.version.each { Node version ->
+                        def versionText = version.text()
+                        version.setValue(versionText.substring(0, versionText.indexOf('_mapped_')))
+                    }
+                    el.appendNode('optional', true)
+                }
+            }
+        }
+    }
+}
